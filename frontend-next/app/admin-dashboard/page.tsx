@@ -68,22 +68,25 @@ export default function AdminDashboardPage() {
 
   if (loading || !user || !user.is_staff) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-slate-200">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4da3ff] mx-auto"></div>
+          <p className="mt-4 text-sm text-slate-400">Syncing admin console...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Admin Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-slate-100">
+      <header className="border-b border-white/5 bg-black/40 backdrop-blur-xl px-6 py-4 flex justify-between items-center shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+        <div>
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Admin Console</p>
+          <h1 className="text-xl font-semibold leading-tight">Global Conversations</h1>
+        </div>
         <button
           onClick={() => router.push("/chat")}
-          className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded transition-colors"
+          className="neon-button rounded-lg px-4 py-2 text-sm"
         >
           Back to Chat
         </button>
@@ -91,43 +94,46 @@ export default function AdminDashboardPage() {
 
       <main className="max-w-6xl mx-auto p-6">
         {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+          <div className="mb-4 p-4 bg-red-900/40 text-red-100 border border-red-500/40 rounded-lg">
             {error}
           </div>
         )}
 
-        <div className="bg-white shadow rounded overflow-hidden">
-          <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-semibold">All Conversations</h2>
-            <p className="text-sm text-gray-500">Total: {conversations.length}</p>
+        <div className="glass-panel border border-white/10 overflow-hidden">
+          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">All Conversations</h2>
+              <p className="text-xs text-slate-400">Total: {conversations.length}</p>
+            </div>
+            <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_4px_rgba(52,211,153,0.4)]" aria-label="live" />
           </div>
 
           {isLoadingData ? (
-            <div className="p-6">Loading conversations...</div>
+            <div className="p-6 text-slate-400">Loading conversations...</div>
           ) : conversations.length === 0 ? (
-            <div className="p-6 text-gray-600">No conversations yet.</div>
+            <div className="p-6 text-slate-400">No conversations yet.</div>
           ) : (
-            <ul className="divide-y">
+            <ul className="divide-y divide-white/5">
               {conversations.map((c) => (
-                <li key={c.id} className="px-6 py-4 hover:bg-gray-50">
-                  <div className="flex items-start justify-between">
-                    <div>
+                <li key={c.id} className="px-6 py-4 hover:bg-white/5 transition-colors">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{c.title || "Untitled"}</span>
-                        <span className="text-xs text-gray-500">by {c.user.username}</span>
+                        <span className="font-semibold text-slate-50">{c.title || "Untitled"}</span>
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300">by {c.user.username}</span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-slate-300/90 line-clamp-2">
                         {c.last_message ? c.last_message : "No messages"}
                       </p>
-                      <div className="text-xs text-gray-500 mt-2">
+                      <div className="text-[11px] text-slate-500 flex items-center gap-2">
                         <span>Messages: {c.message_count}</span>
-                        <span className="mx-2">•</span>
+                        <span>•</span>
                         <span>Updated: {new Date(c.updated).toLocaleString()}</span>
                       </div>
                     </div>
                     <button
                       onClick={() => router.push(`/chat?conversation=${c.id}`)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      className="neon-button rounded-lg px-3 py-2 text-xs"
                     >
                       Open
                     </button>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import RoboticLogo from '../components/RoboticLogo';
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -35,61 +36,62 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black relative overflow-hidden text-slate-100">
+      <div className="absolute inset-0 bg-grid opacity-30" />
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: "radial-gradient(circle at 20% 20%, rgba(77,163,255,0.18), transparent 35%), radial-gradient(circle at 80% 0%, rgba(155,107,255,0.16), transparent 30%)"
+      }} />
+
+      <div className="relative glass-panel w-full max-w-md p-8 border border-white/10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            AI Chatbot
-          </h1>
-          <p className="text-gray-600">
-            {isLogin ? 'Sign in to continue' : 'Create your account'}
+          <div className="flex justify-center mb-6">
+            <RoboticLogo size={80} />
+          </div>
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Neural Access</p>
+          <h1 className="text-3xl font-semibold text-slate-50 mb-2">AI Console</h1>
+          <p className="text-slate-400 text-sm">
+            {isLogin ? 'Authenticate to continue' : 'Provision your access'}
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-900/40 border border-red-500/40 text-red-100 px-4 py-3 rounded-lg mb-4 text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Username
-            </label>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-300">Username</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#4da3ff]"
               required
             />
           </div>
 
           {!isLogin && (
-            <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Email
-              </label>
+            <div className="space-y-2">
+              <label className="text-sm text-slate-300">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#9b6bff]"
                 required={!isLogin}
               />
             </div>
           )}
 
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Password
-            </label>
+          <div className="space-y-2">
+            <label className="text-sm text-slate-300">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#4da3ff]"
               required
             />
           </div>
@@ -97,25 +99,25 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+            className="w-full neon-button rounded-lg py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Sign Up')}
+            {loading ? 'Syncing…' : (isLogin ? 'Enter Console' : 'Create Access')}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-blue-600 hover:underline text-sm"
+            className="text-sm text-[#7dd3fc] hover:text-white transition-colors"
           >
-            {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+            {isLogin ? "New here? Create access" : 'Have access? Sign in'}
           </button>
         </div>
 
-        <div className="mt-4 text-center text-sm text-gray-600">
-          <p>Test accounts:</p>
-          <p className="font-mono">Admin: admin / admin123</p>
-          <p className="font-mono">User: testuser / test123</p>
+        <div className="mt-6 text-center text-xs text-slate-500">
+          <p className="uppercase tracking-[0.2em] text-slate-400 mb-1">Test Accounts</p>
+          <p className="font-mono text-slate-300">Admin: admin / admin123</p>
+          <p className="font-mono text-slate-300">User: testuser / test123</p>
         </div>
       </div>
     </div>

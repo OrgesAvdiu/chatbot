@@ -1,26 +1,95 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #03060d;
+  --background-alt: radial-gradient(circle at 20% 20%, rgba(64, 121, 255, 0.12), transparent 35%),
+    radial-gradient(circle at 80% 10%, rgba(165, 105, 255, 0.12), transparent 35%),
+    radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.1), transparent 30%),
+    #03060d;
+  --foreground: #e7ecff;
+  --muted: #9aa3c2;
+  --panel: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.12);
+  --glow-blue: #4da3ff;
+  --glow-purple: #9b6bff;
+  --glow-cyan: #22d3ee;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-space-grotesk);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--background-alt);
+  color: var(--foreground);
+  font-family: var(--font-space-grotesk), system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.bg-grid {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px;
+}
+
+.glass-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 25px rgba(77, 163, 255, 0.18);
+  border-radius: 16px;
+}
+
+.neon-button {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(135deg, rgba(77, 163, 255, 0.2), rgba(155, 107, 255, 0.2));
+  color: #eaf1ff;
+  box-shadow: 0 0 24px rgba(77, 163, 255, 0.25), inset 0 0 12px rgba(77, 163, 255, 0.15);
+  transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+
+.neon-button:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 0 32px rgba(155, 107, 255, 0.35), inset 0 0 14px rgba(77, 163, 255, 0.2);
+}
+
+.neon-button:active {
+  transform: translateY(0);
+}
+
+.glow-border {
+  position: relative;
+}
+
+.glow-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgba(77, 163, 255, 0.6), rgba(155, 107, 255, 0.6));
+  filter: blur(14px);
+  opacity: 0.55;
+  z-index: -1;
+}
+
+.soft-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.6) rgba(15, 23, 42, 0.4);
+}
+
+.soft-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.soft-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.soft-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(77, 163, 255, 0.7), rgba(155, 107, 255, 0.7));
+  border-radius: 999px;
 }
