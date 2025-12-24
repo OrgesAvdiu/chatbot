@@ -33,7 +33,14 @@ export default function ChatContainer({ initialConversationId }: ChatContainerPr
   // Load conversation messages if initialConversationId is provided
   useEffect(() => {
     const loadConversation = async () => {
-      if (!initialConversationId) return;
+      if (!initialConversationId) {
+        // Reset state for new chat
+        setMessages([]);
+        setConversationId(null);
+        setConversationOwnerId(null);
+        setError(null);
+        return;
+      }
       
       try {
         const response = await fetch(`${API_BASE_URL}/conversations/${initialConversationId}/`, {

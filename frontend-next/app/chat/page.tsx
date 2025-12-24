@@ -12,6 +12,31 @@ export default function ChatPage() {
   const { user, loading, logout } = useAuth();
   const conversationId = searchParams.get('conversation') ? parseInt(searchParams.get('conversation')!) : null;
 
+  const handleNewChat = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/conversations/create/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ title: 'New Conversation' }),
+      });
+
+      if (!response.ok) {
+        console.error('API error:', response.status);
+        throw new Error('Failed to create new conversation');
+      }
+
+      // Clear the conversation parameter and refresh
+      window.location.href = '/chat';
+    } catch (error) {
+      console.error('Error creating new chat:', error);
+      // Fallback: still clear the conversation
+      window.location.href = '/chat';
+    }
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
@@ -40,6 +65,12 @@ export default function ChatPage() {
           </div>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={handleNewChat}
+            className="neon-button rounded-lg px-4 py-2 text-sm"
+          >
+            New Chat
+          </button>
           {user.is_staff && (
             <button
               onClick={() => router.push('/admin-dashboard')}

@@ -1,6 +1,6 @@
 import os
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.contrib.auth import authenticate, login, logout
@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from openai import OpenAI
 from .models import Message, Conversation
 from .serializers import MessageSerializer, ConversationSerializer, ConversationDetailSerializer, UserSerializer
+from .authentication import CsrfExemptSessionAuthentication
 
 
 @api_view(['POST'])
@@ -93,6 +94,7 @@ def conversation_detail_view(request, pk):
 
 
 @api_view(['POST'])
+@authentication_classes([CsrfExemptSessionAuthentication])
 @permission_classes([IsAuthenticated])
 def conversation_create_view(request):
     """Create a new conversation"""
