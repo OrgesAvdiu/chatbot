@@ -20,6 +20,8 @@ export default function ChatContainer({ initialConversationId }: ChatContainerPr
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState('');
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [conversationOwnerId, setConversationOwnerId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export default function ChatContainer({ initialConversationId }: ChatContainerPr
   // Auto scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, streamingMessage]);
 
   const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +95,10 @@ export default function ChatContainer({ initialConversationId }: ChatContainerPr
         payload.conversation_id = conversationId;
       }
 
+      // Show thinking indicator
+      setIsThinking(true);
+      setStreamingMessage('');
+
       const response = await fetch(`${API_BASE_URL}/chat/`, {
         method: 'POST',
         headers: {
@@ -107,25 +113,67 @@ export default function ChatContainer({ initialConversationId }: ChatContainerPr
         throw new Error(errorData.error || 'Failed to send message');
       }
 
-      const data = await response.json();
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = '';
+      let newConversationId: number | null = null;
 
-      // Set conversation ID if this is the first message
-      if (!conversationId && data.conversation_id) {
-        setConversationId(data.conversation_id);
+      if (reader) {
+        // Wait 4 seconds while showing thinking indicator
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        
+        // Hide thinking indicator and start showing streaming content
+        setIsThinking(false);
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.conversation_id && !newConversationId) {
+                newConversationId = data.conversation_id;
+                if (!conversationId) {
+                  setConversationId(data.conversation_id);
+                }
+              }
+
+              if (data.content) {
+                fullResponse += data.content;
+                setStreamingMessage(fullResponse);
+              }
+
+              if (data.done) {
+                // Finalize the assistant message
+                const assistantMessage: Message = {
+                  id: Date.now() + 1,
+                  role: 'assistant',
+                  text: fullResponse,
+                  created: new Date().toISOString(),
+                };
+                setMessages((prev) => [...prev, assistantMessage]);
+                setStreamingMessage('');
+              }
+
+              if (data.error) {
+                throw new Error(data.error);
+              }
+            }
+          }
+        }
       }
-
-      // Add assistant message to UI
-      const assistantMessage: Message = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        text: data.response,
-        created: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
     } catch (err: any) {
       setError(err.message || 'Error sending message');
       // Remove the optimistic user message on error
       setMessages((prev) => prev.filter((m) => m.id !== optimisticUserMessage.id));
+      setIsThinking(false);
+      setStreamingMessage('');
     } finally {
       setLoading(false);
     }
@@ -185,6 +233,33 @@ export default function ChatContainer({ initialConversationId }: ChatContainerPr
                 </div>
               </div>
             ))}
+            
+            {/* Thinking indicator */}
+            {isThinking && (
+              <div className="flex justify-start">
+                <div className="max-w-xl px-4 py-3 rounded-2xl shadow-lg glass-panel text-slate-100 border border-white/5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                      <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                      <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                    </div>
+                    <span className="text-slate-400 text-sm">Thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Streaming message */}
+            {streamingMessage && (
+              <div className="flex justify-start">
+                <div className="max-w-xl px-4 py-3 rounded-2xl shadow-lg glass-panel text-slate-100 border border-white/5">
+                  <p className="break-words whitespace-pre-wrap leading-relaxed">{streamingMessage}</p>
+                  <span className="inline-block w-1 h-4 bg-blue-400 animate-pulse ml-1"></span>
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
         )}

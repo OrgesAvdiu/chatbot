@@ -1,10 +1,13 @@
 import os
+import json
+import time
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.http import StreamingHttpResponse
 from openai import OpenAI
 from .models import Message, Conversation
 from .serializers import MessageSerializer, ConversationSerializer, ConversationDetailSerializer, UserSerializer
@@ -117,8 +120,8 @@ def admin_dashboard_view(request):
 @permission_classes([IsAuthenticated])
 def chat_view(request):
     """
-    Handle chat messages. Receives user message, calls OpenAI, saves both
-    user and assistant messages to database, and returns the response.
+    Handle chat messages with streaming support. Receives user message, streams OpenAI response,
+    saves both user and assistant messages to database.
     """
     try:
         user_message = request.data.get('message')
@@ -197,26 +200,50 @@ Restrictions:
 - Do not provide incorrect or misleading information
 - Do not assume user expertise"""
         
-        response = client.chat.completions.create(
-            model='gpt-4o-mini',
-            messages=[
-                {'role': 'system', 'content': system_prompt},
-                *formatted_history
-            ]
+        # Generator function to stream response
+        def stream_response():
+            full_response = ""
+            
+            try:
+                # Send conversation ID first
+                yield f"data: {json.dumps({'conversation_id': conversation.id})}\n\n"
+                
+                # Stream OpenAI response
+                stream = client.chat.completions.create(
+                    model='gpt-4o-mini',
+                    messages=[
+                        {'role': 'system', 'content': system_prompt},
+                        *formatted_history
+                    ],
+                    stream=True
+                )
+                
+                for chunk in stream:
+                    if chunk.choices[0].delta.content is not None:
+                        content = chunk.choices[0].delta.content
+                        full_response += content
+                        # Send chunk as Server-Sent Event
+                        yield f"data: {json.dumps({'content': content})}\n\n"
+                
+                # Save assistant message after streaming is complete
+                Message.objects.create(conversation=conversation, role='assistant', text=full_response)
+                
+                # Update conversation timestamp
+                conversation.save()
+                
+                # Send done signal
+                yield f"data: {json.dumps({'done': True})}\n\n"
+                
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        
+        response = StreamingHttpResponse(
+            stream_response(),
+            content_type='text/event-stream'
         )
-        
-        assistant_message = response.choices[0].message.content
-        
-        # Save assistant message
-        Message.objects.create(conversation=conversation, role='assistant', text=assistant_message)
-        
-        # Update conversation timestamp
-        conversation.save()
-        
-        return Response({
-            'response': assistant_message,
-            'conversation_id': conversation.id
-        }, status=status.HTTP_200_OK)
+        response['Cache-Control'] = 'no-cache'
+        response['X-Accel-Buffering'] = 'no'
+        return response
     
     except Exception as e:
         return Response(
